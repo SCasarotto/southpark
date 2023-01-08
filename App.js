@@ -54,37 +54,40 @@ export default function App() {
     return (
       <SafeAreaView style={styles.background}>
         <StatusBar style='light' />
-        <Text style={styles.randomizeTitle}>Get a random episode!</Text>
-        {selectedEpisode && (
-          <>
-            <Image
-              source={{ uri: selectedEpisode.thumbnail_url }}
-              style={styles.selectedEpisodeImage}
-            />
-            <Text style={styles.selectedEpisodeTitle}>
-              S{selectedEpisode.season}E{selectedEpisode.episode}: {selectedEpisode.name}
+        <Image source={require('./assets/homeBackground.png')} style={styles.backgroundImage} />
+        <View style={styles.contentBackground}>
+          <Text style={styles.randomizeTitle}>Get a random episode!</Text>
+          {selectedEpisode && (
+            <>
+              <Image
+                source={{ uri: selectedEpisode.thumbnail_url }}
+                style={styles.selectedEpisodeImage}
+              />
+              <Text style={styles.selectedEpisodeTitle}>
+                S{selectedEpisode.season}E{selectedEpisode.episode}: {selectedEpisode.name}
+              </Text>
+            </>
+          )}
+          <Pressable
+            style={styles.randomizeButton}
+            onPress={() => {
+              setSelectedEpisode(episodes[Math.floor(Math.random() * episodes.length)]);
+            }}
+          >
+            <Text style={styles.randomizeButtonText}>
+              {!!selectedEpisode ? 'Give Me Another One Guy!' : 'Random Episode'}
             </Text>
-          </>
-        )}
-        <Pressable
-          style={styles.randomizeButton}
-          onPress={() => {
-            setSelectedEpisode(episodes[Math.floor(Math.random() * episodes.length)]);
-          }}
-        >
-          <Text style={styles.randomizeButtonText}>
-            {!!selectedEpisode ? 'Give Me Another One Guy!' : 'Random Episode'}
-          </Text>
-        </Pressable>
-        <Pressable
-          style={styles.navigateButton}
-          onPress={() => {
-            setPageMode('seasons');
-            setSelectedEpisode(undefined);
-          }}
-        >
-          <Text style={styles.navigateButtonText}>View Seasons</Text>
-        </Pressable>
+          </Pressable>
+          <Pressable
+            style={styles.navigateButton}
+            onPress={() => {
+              setPageMode('seasons');
+              setSelectedEpisode(undefined);
+            }}
+          >
+            <Text style={styles.navigateButtonText}>View Seasons</Text>
+          </Pressable>
+        </View>
       </SafeAreaView>
     );
   }
@@ -92,6 +95,10 @@ export default function App() {
   return (
     <SafeAreaView style={styles.background}>
       <StatusBar style='light' />
+      <Image
+        source={require('./assets/homeBackground.png')}
+        style={[styles.backgroundImage, styles.backgroundNearlyHidden]}
+      />
       <View style={styles.seasonHeader}>
         <Text style={styles.seasonHeaderTitle}>Select a Season</Text>
         <View style={styles.seasonBlockWrapper}>
@@ -163,6 +170,25 @@ const styles = StyleSheet.create({
   background: {
     backgroundColor: '#111111',
     flex: 1,
+    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    resizeMode: 'cover',
+    opacity: 0.5,
+  },
+  backgroundNearlyHidden: {
+    opacity: 0.1,
+  },
+  contentBackground: {
+    padding: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.75)',
     alignItems: 'center',
     flexDirection: 'column',
     justifyContent: 'center',
