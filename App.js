@@ -1,56 +1,36 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Image,
-  SafeAreaView,
-  Pressable,
-  FlatList,
-} from 'react-native';
-import { episodes, episodesBySeason } from './episodes';
+import { StyleSheet, Text, View, Image, SafeAreaView, Pressable, FlatList } from 'react-native';
+import episodes from './data/episodes.json';
+import { images } from './images';
 
-// import axios from 'axios'
+const episodesBySeason = episodes.reduce((acc, episode) => {
+  if (!acc[episode.season]) {
+    acc[episode.season] = [];
+  }
+  acc[episode.season].push(episode);
+  return acc;
+}, {});
 
-// const dataBaseUrl = 'https://spapi.dev/api'
-
-// const getEpisodeByPage = (page) => axios.get(`${dataBaseUrl}/episodes?page=${page}`)
-// const getAllEpisodes = async () => {
-// 	const response = await axios.get(`${dataBaseUrl}/episodes`)
-// 	const { last_page } = response.data.meta
-// 	const allRequests = await Promise.all(
-// 		new Array(last_page).fill(0).map((_, i) => getEpisodeByPage(i + 1)),
-// 	)
-// 	const episodes = allRequests.reduce((acc, curr) => [...acc, ...curr.data.data], [])
-// 	return episodes
-// }
-
-// const [episodes, setEpisodes] = React.useState([])
-// const [loading, setLoading] = React.useState(false)
-
-// useEffect(() => {
-// 	const fetchData = async () => {
-// 		try {
-// 			setLoading(true)
-// 			const data = await getAllEpisodes()
-// 			console.log(JSON.stringify(data))
-// 			setEpisodes(data)
-// 			setLoading(false)
-// 		} catch (error) {
-// 			console.log(error)
-// 		}
-// 	}
-// 	fetchData()
-// }, [])
+const orderedSeasons = Object.keys(episodesBySeason).sort((a, b) => {
+  if (a === 'e') {
+    return 1;
+  }
+  if (b === 'e') {
+    return -1;
+  }
+  return a - b;
+});
 
 export default function App() {
   const [pageMode, setPageMode] = useState('randomizer');
   const [selectedEpisode, setSelectedEpisode] = useState();
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState();
 
+  const { season, episode, title } = selectedEpisode || {};
+
   if (pageMode === 'randomizer') {
+    const seasonNumber = season === 'e' ? images.length - 1 : season;
     return (
       <SafeAreaView style={styles.background}>
         <StatusBar style='light' />
@@ -59,12 +39,9 @@ export default function App() {
           <Text style={styles.randomizeTitle}>Get a random episode!</Text>
           {selectedEpisode && (
             <>
-              <Image
-                source={{ uri: selectedEpisode.thumbnail_url }}
-                style={styles.selectedEpisodeImage}
-              />
+              <Image source={images[seasonNumber][episode]} style={styles.selectedEpisodeImage} />
               <Text style={styles.selectedEpisodeTitle}>
-                S{selectedEpisode.season}E{selectedEpisode.episode}: {selectedEpisode.name}
+                S{seasonNumber}E{episode}: {title}
               </Text>
             </>
           )}
@@ -92,6 +69,8 @@ export default function App() {
     );
   }
 
+  const seasonNumber = selectedSeasonNumber === 'e' ? images.length - 1 : selectedSeasonNumber;
+
   return (
     <SafeAreaView style={styles.background}>
       <StatusBar style='light' />
@@ -102,15 +81,15 @@ export default function App() {
       <View style={styles.seasonHeader}>
         <Text style={styles.seasonHeaderTitle}>Select a Season</Text>
         <View style={styles.seasonBlockWrapper}>
-          {episodesBySeason.map((_, index) => (
+          {orderedSeasons.map((seasonLabel) => (
             <Pressable
               style={[
                 styles.seasonNumberButton,
-                selectedSeasonNumber === index && styles.selectedSeasonNumberButton,
+                selectedSeasonNumber === seasonLabel && styles.selectedSeasonNumberButton,
               ]}
-              onPress={() => setSelectedSeasonNumber(index)}
+              onPress={() => setSelectedSeasonNumber(seasonLabel)}
             >
-              <Text style={styles.seasonNumberButtonText}>{index + 1}</Text>
+              <Text style={styles.seasonNumberButtonText}>{seasonLabel}</Text>
             </Pressable>
           ))}
         </View>
@@ -129,39 +108,14 @@ export default function App() {
         data={episodesBySeason[selectedSeasonNumber]}
         renderItem={({ item }) => (
           <View style={styles.episodeWrapper}>
-            <Image source={{ uri: item.thumbnail_url }} style={styles.episodeImage} />
+            <Image source={images[seasonNumber][item.episode]} style={styles.episodeImage} />
             <Text style={styles.episodeName}>
-              E{item.episode}: {item.name}
+              E{item.episode}: {item.title}
             </Text>
           </View>
         )}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.title}
       />
-      {/* <ScrollView>
-				<View style={styles.container}>
-					<StatusBar style='light' />
-					<Text style={styles.title}>Welcome to my very cool south park app!</Text>
-					{episodesBySeason.map((season, index) => {
-						return (
-							<View key={season.id}>
-								<Text>Season {index}</Text>
-								{season.map((episode) => (
-									<View key={episode.id} style={styles.episodeWrapper}>
-										<Image
-											source={{ uri: episode.thumbnail_url }}
-											style={styles.episodeImage}
-										/>
-										<Text style={styles.episodeName}>
-											S{episode.season}E{episode.episode}: {
-												episode.name}
-										</Text>
-									</View>
-								))}
-							</View>
-						)
-					})}
-				</View>
-			</ScrollView> */}
     </SafeAreaView>
   );
 }
