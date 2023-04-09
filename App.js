@@ -30,7 +30,7 @@ export default function App() {
   const { season, episode, title } = selectedEpisode || {};
 
   if (pageMode === 'randomizer') {
-    const seasonNumber = season === 'e' ? images.length - 1 : season;
+    const seasonNumber = season === 'e' ? images.length - 1 : season - 1;
     return (
       <SafeAreaView style={styles.background}>
         <StatusBar style='light' />
@@ -39,9 +39,12 @@ export default function App() {
           <Text style={styles.randomizeTitle}>Get a random episode!</Text>
           {selectedEpisode && (
             <>
-              <Image source={images[seasonNumber][episode]} style={styles.selectedEpisodeImage} />
+              <Image
+                source={images[seasonNumber][episode - 1]}
+                style={styles.selectedEpisodeImage}
+              />
               <Text style={styles.selectedEpisodeTitle}>
-                S{seasonNumber}E{episode}: {title}
+                S{season}E{episode}: {title}
               </Text>
             </>
           )}
@@ -69,7 +72,7 @@ export default function App() {
     );
   }
 
-  const seasonNumber = selectedSeasonNumber === 'e' ? images.length - 1 : selectedSeasonNumber;
+  const seasonNumber = selectedSeasonNumber === 'e' ? images.length - 1 : selectedSeasonNumber - 1;
 
   return (
     <SafeAreaView style={styles.background}>
@@ -108,7 +111,7 @@ export default function App() {
         data={episodesBySeason[selectedSeasonNumber]}
         renderItem={({ item }) => (
           <View style={styles.episodeWrapper}>
-            <Image source={images[seasonNumber][item.episode]} style={styles.episodeImage} />
+            <Image source={images[seasonNumber][item.episode - 1]} style={styles.episodeImage} />
             <Text style={styles.episodeName}>
               E{item.episode}: {item.title}
             </Text>
