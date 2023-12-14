@@ -38,7 +38,8 @@ const processEpisode = async (episode) => {
   // Season might be "e" for event. If so, we will use "e" as the season number
   const seasonNumber = season === 'e' ? season : season < 10 ? `0${season}` : season;
   const episodeNumberString = episodeNumber < 10 ? `0${episodeNumber}` : episodeNumber;
-  const path = `./images/s${seasonNumber}/e${episodeNumberString}.png`;
+  const fileType = thumbnailUrl.split('.').pop();
+  const path = `./images/s${seasonNumber}/e${episodeNumberString}.${fileType}`;
 
   // Create the season folder if it doesn't exist
   createFolder(`./images/s${seasonNumber}`);

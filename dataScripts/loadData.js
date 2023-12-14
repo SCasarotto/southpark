@@ -4,7 +4,7 @@ const fs = require('fs');
 const SITE_URL = 'https://southpark.cc.com/wiki/List_of_Episodes';
 
 const getAllEpisodes = async () => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({ timeout: 0, });
   const page = await browser.newPage();
 
   // Enable to see console logs in the evaluate function
@@ -30,6 +30,7 @@ const getAllEpisodes = async () => {
       const seasonEpisodes = rows.map((row, index) => {
         const [image, titleElement] = row.querySelectorAll('td');
         const title = titleElement.innerText;
+        const episodeUrl = titleElement.querySelector('a').href;
         const episode = index + 1;
         const thumbnailUrl = image.querySelector('img').src;
 
@@ -38,12 +39,38 @@ const getAllEpisodes = async () => {
           episode,
           title,
           thumbnailUrl,
+          episodeUrl,
         };
       });
 
       return [...acc, ...seasonEpisodes];
     }, []);
   });
+  console.log(`Found ${episodes.length} episodes!`);
+
+  // Navigate to each episode page to get the air date
+  for (let i = 0; i < episodes.length; i++) {
+    const episode = episodes[i];
+    await page.goto(episode.episodeUrl);
+
+    // Find td with "Original Air Date" and get the next td
+    const airDate = await page.evaluate(() => {
+      // find the table in the div with class info-box
+      const infoBoxTable = document.querySelector('div.info-box table');
+      // find the row with the text "Original Air Date"
+      const airDateRow = Array.from(infoBoxTable.querySelectorAll('tr')).find((row) =>
+        row.innerText.includes('Original Air Date'),
+      );
+      // get the text from the second td
+      // [0] = "Original Air Date"
+      // [1] = "April 5, 1997"
+      const airDate = airDateRow.querySelectorAll('td')[1].innerText;
+      return airDate;
+    });
+    console.log(`Found air date ${airDate} for ${episode.title}`);
+
+    episode.airDate = airDate;
+  }
 
   await browser.close();
   console.log(`Found ${episodes.length} episodes!`);
