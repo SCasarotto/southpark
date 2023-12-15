@@ -46,13 +46,13 @@ const processEpisode = async (episode) => {
 
   // Check if the image already exists
   if (fileExists(path)) {
-    // console.log(`Skipping ${path} (already exists)`);
+    console.log(`Skipping ${path} (already exists)`);
     return;
   }
 
   // Download the image and save it to the images folder with a path matching the season and episode number
   try {
-    // console.log(`Downloading ${thumbnailUrl} for s${seasonNumber} e${episodeNumber}`);
+    console.log(`Downloading ${thumbnailUrl} for s${seasonNumber} e${episodeNumber}`);
     await downloadImage(thumbnailUrl, path);
   } catch (e) {
     console.log(

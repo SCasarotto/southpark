@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, SafeAreaView, Pressable, FlatList } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  SafeAreaView,
+  Pressable,
+  FlatList,
+  Linking,
+} from 'react-native';
 import episodes from './data/episodes.json';
 import { images } from './images';
 
@@ -27,7 +36,7 @@ export default function App() {
   const [selectedEpisode, setSelectedEpisode] = useState();
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState();
 
-  const { season, episode, title } = selectedEpisode || {};
+  const { season, episode, title, airDate, description, seriesEpisode } = selectedEpisode || {};
 
   if (pageMode === 'randomizer') {
     const seasonNumber = season === 'e' ? images.length - 1 : season - 1;
@@ -46,6 +55,32 @@ export default function App() {
               <Text style={styles.selectedEpisodeTitle}>
                 S{season}E{episode}: {title}
               </Text>
+              <Text style={styles.selectedEpisodeDate}>
+                #{seriesEpisode} - {airDate}
+              </Text>
+              <Text style={styles.selectedEpisodeDescription}>{description}</Text>
+              <Pressable
+                style={styles.viewEpisodeOnlineButton}
+                onPress={async () => {
+                  try {
+                    const url = selectedEpisode.episodeUrl;
+                    // Checking if the link is supported for links with custom URL scheme.
+                    const supported = await Linking.canOpenURL(url);
+
+                    if (supported) {
+                      // Opening the link with some app, if the URL scheme is "http" the web link should be opened
+                      // by some browser in the mobile
+                      await Linking.openURL(url);
+                    } else {
+                      Alert.alert(`Don't know how to open this URL: ${url}`);
+                    }
+                  } catch (e) {
+                    console.log(e);
+                  }
+                }}
+              >
+                <Text style={styles.viewEpisodeOnlineButtonText}>View Episode Online</Text>
+              </Pressable>
             </>
           )}
           <Pressable
@@ -86,6 +121,7 @@ export default function App() {
         <View style={styles.seasonBlockWrapper}>
           {orderedSeasons.map((seasonLabel) => (
             <Pressable
+              key={seasonLabel}
               style={[
                 styles.seasonNumberButton,
                 selectedSeasonNumber === seasonLabel && styles.selectedSeasonNumberButton,
@@ -110,12 +146,37 @@ export default function App() {
         style={styles.episodeList}
         data={episodesBySeason[selectedSeasonNumber]}
         renderItem={({ item }) => (
-          <View style={styles.episodeWrapper}>
+          <Pressable
+            style={styles.episodeWrapper}
+            onPress={async () => {
+              try {
+                const url = item.episodeUrl;
+                // Checking if the link is supported for links with custom URL scheme.
+                const supported = await Linking.canOpenURL(url);
+
+                if (supported) {
+                  // Opening the link with some app, if the URL scheme is "http" the web link should be opened
+                  // by some browser in the mobile
+                  await Linking.openURL(url);
+                } else {
+                  Alert.alert(`Don't know how to open this URL: ${url}`);
+                }
+              } catch (e) {
+                console.log(e);
+              }
+            }}
+          >
             <Image source={images[seasonNumber][item.episode - 1]} style={styles.episodeImage} />
-            <Text style={styles.episodeName}>
-              E{item.episode}: {item.title}
-            </Text>
-          </View>
+            <View style={styles.textWrapper}>
+              <Text style={styles.episodeName}>
+                E{item.episode}: {item.title}
+              </Text>
+              <Text style={styles.episodeAirDate}>
+                #{item.seriesEpisode} - {item.airDate}
+              </Text>
+              <Text style={styles.episodeDescription}>{item.description}</Text>
+            </View>
+          </Pressable>
         )}
         keyExtractor={(item) => item.title}
       />
@@ -164,8 +225,30 @@ const styles = StyleSheet.create({
   selectedEpisodeTitle: {
     color: '#ffffff',
     fontSize: 24,
-    marginBottom: 20,
+    marginBottom: 5,
     textAlign: 'center',
+    fontWeight: '600',
+  },
+  selectedEpisodeDate: {
+    color: '#ffffff',
+    fontSize: 18,
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  selectedEpisodeDescription: {
+    color: '#ffffff',
+    fontSize: 16,
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  viewEpisodeOnlineButton: {
+    padding: 5,
+    marginBottom: 20,
+  },
+  viewEpisodeOnlineButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
   randomizeButton: {
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -219,13 +302,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  seasonsBackButton: {
+  seasonsBackButton: ({ pressed }) => ({
     position: 'absolute',
     top: -15,
     left: 0,
     paddingHorizontal: 15,
     paddingVertical: 20,
-  },
+    backgroundColor: pressed ? 'rgba(255,255,255,0.1)' : 'transparent',
+    borderRadius: 20,
+  }),
   seasonsBackButtonText: { color: '#ffffff' },
   episodeList: { width: '100%' },
   container: {
@@ -237,23 +322,39 @@ const styles = StyleSheet.create({
     margin: 10,
     color: '#ffffff',
   },
-  episodeWrapper: {
+  episodeWrapper: ({ pressed }) => ({
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'flex-start',
-    paddingLeft: 10,
-    paddingRight: 10,
-    marginBottom: 10,
-  },
+    padding: 10,
+    backgroundColor: pressed ? 'rgba(255,255,255,0.1)' : 'transparent',
+  }),
   episodeImage: {
     width: 75,
     height: 75,
     borderRadius: 5,
+  },
+  textWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    flexShrink: 1,
   },
   episodeName: {
     marginLeft: 10,
     fontSize: 18,
     color: '#ffffff',
     flexShrink: 1,
+    fontWeight: '600',
+  },
+  episodeAirDate: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  episodeDescription: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: '#ffffff',
   },
 });
